@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model barang {
+  ID_BARANG       Int               @id @default(autoincrement())
+  NAMA_BARANG     String            @db.VarChar(250)
+  KATEGORI        String            @db.VarChar(100)
+  SATUAN          String            @db.VarChar(100)
+  HARGA_BELI      Float
+  HARGA_JUAL      Float
+  STOK            Float
+  KETERANGAN      String            @db.VarChar(250)
+  BARCODE         String            @db.VarChar(250)
+  pembelian_detil pembelian_detil[]
+  penjualan_detil penjualan_detil[]
+}
+
+model pelanggan {
+  ID_PELANGGAN   Int        @id @default(autoincrement())
+  NAMA_PELANGGAN String     @db.VarChar(50)
+  ALAMAT         String     @db.VarChar(250)
+  NOMOR_TELEPON  String     @db.VarChar(50)
+  penjualan      penjualan?
+}
+
+model pemasok {
+  ID_PEMASOK    Int         @id @default(autoincrement())
+  NAMA_PEMASOK  String      @db.VarChar(50)
+  ALAMAT        String      @db.VarChar(250)
+  NOMOR_TELEPON String      @db.VarChar(50)
+  pembelian     pembelian[]
+}
+
+model pembelian {
+  ID_PEMBELIAN      Int               @id @default(autoincrement())
+  TANGGAL           DateTime          @db.DateTime(0)
+  TOTAL_PEMBELIAN   Float
+  POTONGAN          Float
+  METODE_PEMBAYARAN String            @db.VarChar(50)
+  KETERANGAN        String            @db.VarChar(250)
+  ID_PENGGUNA       Int
+  ID_PEMASOK        Int
+  pemasok           pemasok           @relation(fields: [ID_PEMASOK], references: [ID_PEMASOK], onDelete: NoAction, onUpdate: NoAction, map: "cid1")
+  pengguna          pengguna          @relation(fields: [ID_PENGGUNA], references: [ID_PENGGUNA], onDelete: NoAction, onUpdate: NoAction, map: "cid2")
+  pembelian_detil   pembelian_detil[]
+
+  @@index([ID_PEMASOK], map: "index1")
+  @@index([ID_PENGGUNA], map: "index2")
+}
+
+model pembelian_detil {
+  ID_PEMBELIAN Int
+  ID_BARANG    Int
+  HARGA_SATUAN Float
+  JUMLAH       Float
+  TOTAL_HARGA  Float
+  barang       barang    @relation(fields: [ID_BARANG], references: [ID_BARANG], onDelete: NoAction, onUpdate: NoAction, map: "cid7")
+  pembelian    pembelian @relation(fields: [ID_PEMBELIAN], references: [ID_PEMBELIAN], onDelete: NoAction, onUpdate: NoAction, map: "cid8")
+
+  @@id([ID_PEMBELIAN, ID_BARANG])
+  @@index([ID_PEMBELIAN], map: "index1")
+  @@index([ID_BARANG], map: "index2")
+}
+
+model pengguna {
+  ID_PENGGUNA   Int         @id @default(autoincrement())
+  NAMA_PENGGUNA String      @db.VarChar(50)
+  ALAMAT        String      @db.VarChar(250)
+  NOMOR_TELEPON String      @db.VarChar(50)
+  USERNAME      String      @db.VarChar(100)
+  PASSWORD      String      @db.VarChar(100)
+  HAK_AKSES     String      @db.VarChar(100)
+  pembelian     pembelian[]
+  penjualan     penjualan[]
+}
+
+model penjualan {
+  ID_PELANGGAN      Int
+  ID_PENGGUNA       Int
+  ID_PENJUALAN      Int               @id
+  KETERANGAN        String            @db.VarChar(250)
+  METODE_PEMBAYARAN String            @db.VarChar(50)
+  POTONGAN          Float
+  TANGGAL           DateTime          @db.DateTime(0)
+  TOTAL_PENJUALAN   Float
+  pengguna          pengguna          @relation(fields: [ID_PENGGUNA], references: [ID_PENGGUNA], onDelete: NoAction, onUpdate: NoAction, map: "cid3")
+  pelanggan         pelanggan         @relation(fields: [ID_PENJUALAN], references: [ID_PELANGGAN], onDelete: NoAction, onUpdate: NoAction, map: "cid4")
+  penjualan_detil   penjualan_detil[]
+
+  @@index([ID_PENGGUNA], map: "index1")
+  @@index([ID_PELANGGAN], map: "index2")
+}
+
+model penjualan_detil {
+  ID_PENJUALAN Int
+  ID_BARANG    Int
+  HARGA_SATUAN Float
+  JUMLAH       Float
+  TOTAL_HARGA  Float
+  penjualan    penjualan @relation(fields: [ID_PENJUALAN], references: [ID_PENJUALAN], onDelete: NoAction, onUpdate: NoAction, map: "cid5")
+  barang       barang    @relation(fields: [ID_BARANG], references: [ID_BARANG], onDelete: NoAction, onUpdate: NoAction, map: "cid6")
+
+  @@id([ID_PENJUALAN, ID_BARANG])
+  @@index([ID_PENJUALAN], map: "index1")
+  @@index([ID_BARANG], map: "index2")
+}
